@@ -98,7 +98,8 @@ previousMillis = millis();
 void loop() {
 
 
-  
+  //For some reason the code would initialize a delay in the code as double the value inside this parameter,
+ 
   if(millis() <= 7500)
   {
     delay (7500);
