@@ -9,10 +9,45 @@
 
 
 
-unsigned long previousMillis;
 
-int solenoidPin = 2;
-int count;
+
+
+
+
+
+
+//heading function for magnetometer
+
+template <typename T> float computeHeading(LIS3MDL::vector<T> from)
+{
+  LIS3MDL::vector<int32_t> temp_m = {mag.m.x, mag.m.y, mag.m.z};
+
+  // copy acceleration readings from LSM6::vector into an LIS3MDL::vector
+  LIS3MDL::vector<int16_t> a = {imu.a.x, imu.a.y, imu.a.z};
+
+  // compute E and N
+  LIS3MDL::vector<float> E;
+  LIS3MDL::vector<float> N;
+  LIS3MDL::vector_cross(&temp_m, &a, &E);
+  LIS3MDL::vector_normalize(&E);
+  LIS3MDL::vector_cross(&a, &E, &N);
+  LIS3MDL::vector_normalize(&N);
+
+  // compute heading
+  float heading = atan2(LIS3MDL::vector_dot(&E, &from), LIS3MDL::vector_dot(&N, &from)) * 180 / PI;
+  if (heading < 0) heading += 360;
+  return heading;
+}
+
+
+
+
+
+
+unsigned long zeroTime;
+
+int solenoidPin = 5;    //pin 2 is a goner
+
 
 int CF2 = 0.75;  //A value we mulitplied by the second wheel to keep the wheel base adjustment correct for turning each wheel
 
@@ -41,12 +76,16 @@ previousMillis = millis();
 
 
 
-
-
-
+{
+  pinMode(solenoidPin, OUTPUT);
+  Serial.begin(9600);
+  zeroTime = millis();
+}
 
 
 }
+
+
 
 
 
@@ -57,40 +96,36 @@ previousMillis = millis();
 
 //Action.
 void loop() {
-  // put your main code here, to run repeatedly:
 
 
-if (millis() - previousMillis < 300)
+  
+  if(millis() <= 7500)
+  {
+    delay (7500);
+  }
+  
+ 
+  if (millis()-zeroTime < 100)
+  {
+    digitalWrite(solenoidPin, HIGH);
+  }
+   else if (millis() - zeroTime > 100 and millis() - zeroTime < 1100) 
+  {
+    digitalWrite(solenoidPin, LOW);
+    
+  }
+  
+  else if (millis() - zeroTime > 1100)
+  {
+zeroTime = millis();
+  }
 
-{
-
-  digitalWrite(solenoidPin, HIGH);
-
-}
-
-else if (millis() - previousMillis > 300 and millis() - previousMillis < 600)  {
-digitalWrite(solenoidPin, LOW);
-
-}
-
-else if (millis() - previousMillis > 600) {
-previousMillis = millis();
-
-
-
-}
-
-
-}
-
-
-
-
-
-
-
-
-////////////// REED SWITCH ///////////////////////////////////////////////////
+ 
+  
+  
+  
+  
+  ////////////// REED SWITCH ///////////////////////////////////////////////////
   switchState = digitalRead(switchPin);
 
 ////////////// Serial Print  ///////////////////////////////////////////////////
@@ -105,34 +140,11 @@ previousMillis = millis();
   Serial.print("  ");
 
 
-  //delay(100);
-}
 
 
 
 
-//heading function for magnetometer
 
-template <typename T> float computeHeading(LIS3MDL::vector<T> from)
-{
-  LIS3MDL::vector<int32_t> temp_m = {mag.m.x, mag.m.y, mag.m.z};
-
-  // copy acceleration readings from LSM6::vector into an LIS3MDL::vector
-  LIS3MDL::vector<int16_t> a = {imu.a.x, imu.a.y, imu.a.z};
-
-  // compute E and N
-  LIS3MDL::vector<float> E;
-  LIS3MDL::vector<float> N;
-  LIS3MDL::vector_cross(&temp_m, &a, &E);
-  LIS3MDL::vector_normalize(&E);
-  LIS3MDL::vector_cross(&a, &E, &N);
-  LIS3MDL::vector_normalize(&N);
-
-  // compute heading
-  float heading = atan2(LIS3MDL::vector_dot(&E, &from), LIS3MDL::vector_dot(&N, &from)) * 180 / PI;
-  if (heading < 0) heading += 360;
-  return heading;
-}
 
 /*
 Returns the angular difference in the horizontal plane between a
@@ -182,4 +194,45 @@ myservo2 = 90*CF2;
 }
 
   myservo.write(pos);              // tell servo to go to position in variable 'pos'
-  delay(10); 
+ 
+  
+  
+  
+  
+  
+  
+  
+  if(millis() >= 75000)
+  {
+    exit;
+  }
+
+
+
+
+
+
+
+
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
